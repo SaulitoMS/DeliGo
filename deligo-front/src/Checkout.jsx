@@ -1,10 +1,38 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from './context/CartContext'
-import axios from 'axios'
-import { jwtDecode } from "jwt-decode"
 import Navbar from './Navbar'
 import PlatoModal from './PlatoModal' // Asegúrate de tener actualizado este componente como vimos antes
+
+// --- MODAL DE PEDIDO EXITOSO ---
+function PedidoExitosoModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center transform animate-scaleIn">
+        
+        {/* Icono Check Animado */}
+        <div className="w-20 h-20 bg-green-500 rounded-full mx-auto flex items-center justify-center mb-6 animate-bounce">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white" className="w-12 h-12">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Pedido Realizado!</h2>
+        <p className="text-gray-600 mb-6">
+          Tu pedido está en camino. Recibirás una notificación cuando el repartidor esté cerca.
+        </p>
+
+        <button 
+          onClick={onClose}
+          className="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
 // --- ICONOS SVG (Estilo Neutro/Gris) ---
 const IconMapPin = () => (
@@ -233,6 +261,7 @@ function Checkout() {
   const navigate = useNavigate()
   const [isProcessing, setIsProcessing] = useState(false)
   const [comentarios, setComentarios] = useState('')
+  const [mostrarExito, setMostrarExito] = useState(false)
 
   // Datos Simulados
   const [savedAddresses, setSavedAddresses] = useState([
@@ -253,30 +282,25 @@ function Checkout() {
   const costoEnvio = 21.00; const tarifaServicio = 6.00; const propina = 5.00; const subtotal = total
   const granTotal = subtotal + costoEnvio + tarifaServicio + propina; const ahorro = 45.00
 
-  // Si se vacía el carrito, salir
-  useEffect(() => { 
-    if (carrito.length === 0) navigate('/home') 
-  }, [carrito, navigate])
+useEffect(() => { 
+  if (carrito.length === 0 && !mostrarExito) navigate('/home') 
+}, [carrito, navigate, mostrarExito])
 
-  const handleRealizarPedido = async () => {
-    const token = localStorage.getItem('token')
-    if(!token) return navigate('/')
-    setIsProcessing(true)
-    try {
-        const decoded = jwtDecode(token)
-        const pedidoData = {
-            cliente: decoded.sub,
-            detalles: carrito.map(item => ({ cantidad: item.cantidad, plato: { id: item.id }, notas: item.opciones ? item.opciones.map(o => o.nombre).join(', ') : '' })),
-            comentariosGenerales: comentarios,
-            direccionEntrega: `${selectedAddress.calle}, ${selectedAddress.ciudad} (${selectedAddress.alias})`,
-            metodoPago: typeof metodoPago === 'string' ? metodoPago : `Tarjeta ${metodoPago.brand} terminada en ${metodoPago.last4}`
-        }
-        await axios.post('http://localhost:8080/api/pedidos', pedidoData, { headers: { 'Authorization': `Bearer ${token}` } })
-        alert("¡Pedido en camino! 🛵")
-        limpiarCarrito()
-        navigate('/home')
-    } catch (error) { console.error(error); alert("Error al procesar.") } finally { setIsProcessing(false) }
-  }
+const handleRealizarPedido = () => {
+  setIsProcessing(true)
+  
+  // Simular un pequeño delay para que se vea el "Procesando..."
+  setTimeout(() => {
+    setIsProcessing(false)
+    setMostrarExito(true)
+  }, 1000)
+}
+
+const handleCerrarModalExito = () => {
+  setMostrarExito(false)
+  limpiarCarrito()
+  navigate('/home')
+}
 
   // Lógica de Edición desde el Modal
   const handleUpdateOrder = (plato, nuevaCantidad, nuevasOpciones) => {
@@ -397,9 +421,12 @@ function Checkout() {
                 initialOpciones={editingItem.opciones}
                 onClose={() => setEditingItem(null)}
                 onAddToCart={handleUpdateOrder}
-                isEditing={true} // <--- ESTO ASEGURA QUE DIGA "ACTUALIZAR"
+                isEditing={true}
             />
         )}
+
+        {/* MODAL DE ÉXITO */}
+        {mostrarExito && <PedidoExitosoModal onClose={handleCerrarModalExito} />}
     </div>
   )
 }

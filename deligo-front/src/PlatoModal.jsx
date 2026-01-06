@@ -98,7 +98,7 @@ function PlatoModal({
                         className="flex-1 h-12 rounded-lg font-bold text-lg flex justify-between items-center px-6 transition-all bg-orange-500 hover:bg-orange-600 text-white"
                     >
                         {/* CAMBIO 2: Quitamos la condición que decía "Eliminar". Siempre muestra Actualizar/Agregar */}
-                        <span>{isEditing ? 'Actualizar' : 'Agregar al pedido'}</span>
+                        <span>{isEditing ? 'Actualizar' : 'Agregar'}</span>
                         <span>MX${total.toFixed(2)}</span>
                     </button>
                 </div>
