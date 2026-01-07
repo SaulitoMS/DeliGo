@@ -51,6 +51,7 @@ function Home() {
                         src={restaurante.imagenUrl || "https://via.placeholder.com/400x200"} 
                         alt={restaurante.nombre} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => e.target.src = "https://via.placeholder.com/400x200"} // <--- AGREGA ESTO
                       />
                       <div className="absolute bottom-2 right-2 bg-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
                         20-30 min

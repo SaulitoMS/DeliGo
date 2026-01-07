@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from './context/CartContext'
+import { jwtDecode } from "jwt-decode"  // <--- AGREGA ESTA LÍNEA
+import axios from 'axios'
 import Navbar from './Navbar'
 import PlatoModal from './PlatoModal' // Asegúrate de tener actualizado este componente como vimos antes
 
@@ -286,14 +288,36 @@ useEffect(() => {
   if (carrito.length === 0 && !mostrarExito) navigate('/home') 
 }, [carrito, navigate, mostrarExito])
 
-const handleRealizarPedido = () => {
+const handleRealizarPedido = async () => {
+  const token = localStorage.getItem('token')
+  if(!token) return navigate('/')
   setIsProcessing(true)
   
-  // Simular un pequeño delay para que se vea el "Procesando..."
-  setTimeout(() => {
-    setIsProcessing(false)
-    setMostrarExito(true)
-  }, 1000)
+  try {
+      const decoded = jwtDecode(token)
+      const pedidoData = {
+          cliente: decoded.sub,
+          direccionEntrega: `${selectedAddress.calle}, ${selectedAddress.ciudad} (${selectedAddress.alias})`,
+          metodoPago: typeof metodoPago === 'string' ? metodoPago : `Tarjeta ${metodoPago.brand} terminada en ${metodoPago.last4}`,
+          detalles: carrito.map(item => ({ 
+              cantidad: item.cantidad, 
+              plato: { id: item.id }
+          }))
+      }
+      
+      await axios.post('http://localhost:8080/api/pedidos', pedidoData, { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+      })
+      
+      // Mostrar modal de éxito
+      setMostrarExito(true)
+      
+  } catch (error) { 
+      console.error(error)
+      alert("Error al procesar el pedido: " + (error.response?.data || error.message))
+  } finally { 
+      setIsProcessing(false) 
+  }
 }
 
 const handleCerrarModalExito = () => {

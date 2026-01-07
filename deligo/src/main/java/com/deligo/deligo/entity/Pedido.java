@@ -15,14 +15,18 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String cliente; // Por ahora usaremos un nombre simple, luego conectamos usuarios reales
+    private String cliente;
     private LocalDateTime fecha;
     private Double total;
-    private String estado; // "PENDIENTE", "ENVIADO", "ENTREGADO"
+    private String estado; // "PENDIENTE", "ACEPTADO", "EN_CAMINO", "ENTREGADO"
+    
+    // NUEVO: ID del repartidor asignado
+    private Long repartidorId;
+    
+    private String direccionEntrega; // NUEVO
+    private String metodoPago; // NUEVO
 
-    // Relación con los detalles
-    // CascadeType.ALL significa: "Si guardo el Pedido, guarda también sus detalles automáticamente"
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
-    @JsonManagedReference // Complemento del BackReference para manejar el JSON correctamente
+    @JsonManagedReference
     private List<DetallePedido> detalles;
 }
